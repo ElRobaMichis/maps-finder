@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Find top-rated businesses on Google Maps using smart Bayesian ranking",
   "permissions": [
-    "storage"
+    "storage",
+    "geolocation"
   ],
   "action": {
     "default_popup": "popup/popup.html",

@@ -249,7 +249,8 @@ async function handleSearch() {
       searchMode,
       radiusKm: elements.radiusSlider.value,
       location: locationLabel,
-      algorithm: state.algorithm
+      algorithm: state.algorithm,
+      locationSource: location.source || 'manual'
     };
 
     displayResults(results.data, searchParams);
@@ -408,10 +409,16 @@ function displayResults(results, searchParams = null) {
 
     const algoLabel = searchParams.algorithm === 'popularity' ? 'Popularity' : 'Bayesian';
 
+    const locationSourceLabel = searchParams.locationSource === 'gps'
+      ? '<span class="location-badge location-gps">GPS</span>'
+      : searchParams.locationSource === 'ip'
+        ? '<span class="location-badge location-ip">Approximate</span>'
+        : '';
+
     searchInfoHtml = `
       <div class="search-info">
         <span class="search-info-label">${searchLabel}</span>
-        <span class="search-info-detail">${escapeHtml(String(searchParams.radiusKm))} km from ${escapeHtml(searchParams.location)} · ${algoLabel}</span>
+        <span class="search-info-detail">${escapeHtml(String(searchParams.radiusKm))} km from ${escapeHtml(searchParams.location)} ${locationSourceLabel} · ${algoLabel}</span>
       </div>
     `;
   }
