@@ -873,3 +873,107 @@ input[type="range"]::-webkit-slider-thumb:active {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
+
+/* IP Location Consent Dialog */
+.consent-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 20, 25, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.consent-dialog {
+  background: var(--navy);
+  border: 1px solid var(--navy-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  max-width: 340px;
+  box-shadow: var(--shadow-elevated);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.consent-dialog h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: var(--space-md);
+}
+
+.consent-dialog p {
+  font-size: 13px;
+  color: var(--cream-dark);
+  margin-bottom: var(--space-sm);
+  line-height: 1.5;
+}
+
+.consent-dialog .consent-note {
+  font-size: 11px;
+  color: var(--navy-muted);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--navy-deep);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--gold-muted);
+  margin-bottom: var(--space-md);
+}
+
+.consent-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.consent-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.consent-allow {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-muted) 100%);
+  color: var(--navy-deep);
+}
+
+.consent-allow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.consent-deny {
+  background: var(--navy-light);
+  color: var(--cream-dark);
+  border: 1px solid var(--navy-muted);
+}
+
+.consent-deny:hover {
+  background: var(--navy-muted);
+  color: var(--cream);
+}

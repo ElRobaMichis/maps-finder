@@ -1,6 +1,6 @@
 // Popup UI logic
 import { sendMessage, MessageTypes } from '../utils/messaging.js';
-import { getStoredApiKey, saveApiKey, getPreferences, savePreferences, saveLastResults, getLastResults } from '../utils/storage.js';
+import { getStoredApiKey, saveApiKey, getPreferences, savePreferences, saveLastResults, getLastResults, getIPLocationConsent, saveIPLocationConsent } from '../utils/storage.js';
 
 // DOM Elements
 const $ = (id) => document.getElementById(id);
@@ -275,7 +275,7 @@ async function handleSearch() {
   }
 }
 
-// Get current position (tries browser geolocation first, then IP fallback)
+// Get current position (tries browser geolocation first, then IP fallback with consent)
 async function getCurrentPosition() {
   // First try browser geolocation
   try {
@@ -298,9 +298,22 @@ async function getCurrentPosition() {
       source: 'gps'
     };
   } catch (browserError) {
-    console.log('Browser geolocation failed, trying IP fallback...');
+    console.log('Browser geolocation failed, checking IP fallback consent...');
 
-    // Fallback to IP geolocation
+    // Check if user has already consented to IP geolocation
+    const hasConsent = await getIPLocationConsent();
+
+    if (!hasConsent) {
+      // Ask for consent before using IP geolocation
+      const userConsent = await showIPConsentDialog();
+      if (!userConsent) {
+        throw new Error('Location access denied. Please use a custom location instead.');
+      }
+      // Save consent for future use
+      await saveIPLocationConsent(true);
+    }
+
+    // Fallback to IP geolocation (with consent)
     try {
       const response = await sendMessage(MessageTypes.GET_LOCATION, {});
 
@@ -313,6 +326,39 @@ async function getCurrentPosition() {
       throw new Error('Could not determine location. Please use custom location.');
     }
   }
+}
+
+// Show IP geolocation consent dialog
+function showIPConsentDialog() {
+  return new Promise((resolve) => {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'consent-overlay';
+    overlay.innerHTML = `
+      <div class="consent-dialog">
+        <h3>Location Access</h3>
+        <p>Browser location is unavailable. Would you like to use approximate location based on your IP address?</p>
+        <p class="consent-note">Your IP will be sent to a third-party geolocation service (ipapi.co) to determine your approximate location.</p>
+        <div class="consent-buttons">
+          <button class="consent-btn consent-deny">No, I'll enter location manually</button>
+          <button class="consent-btn consent-allow">Yes, use approximate location</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Handle button clicks
+    overlay.querySelector('.consent-allow').addEventListener('click', () => {
+      overlay.remove();
+      resolve(true);
+    });
+
+    overlay.querySelector('.consent-deny').addEventListener('click', () => {
+      overlay.remove();
+      resolve(false);
+    });
+  });
 }
 
 // Display results
@@ -333,19 +379,39 @@ function displayResults(results, searchParams = null) {
       'pharmacy': 'Pharmacy',
       'gas_station': 'Gas Station',
       'hotel': 'Hotel',
+      'motel': 'Motel',
       'grocery_store': 'Grocery Store',
-      'supermarket': 'Supermarket'
+      'supermarket': 'Supermarket',
+      'ramen_restaurant': 'Ramen',
+      'mexican_restaurant': 'Mexican Restaurant',
+      'japanese_restaurant': 'Japanese Restaurant',
+      'chinese_restaurant': 'Chinese Restaurant',
+      'steak_house': 'Steak House',
+      'hamburger_restaurant': 'Hamburger Restaurant',
+      'barbecue_restaurant': 'Barbecue Restaurant',
+      'breakfast_restaurant': 'Breakfast Restaurant',
+      'brunch_restaurant': 'Brunch Restaurant',
+      'karaoke': 'Karaoke',
+      'aquarium': 'Aquarium',
+      'botanical_garden': 'Botanical Garden',
+      'skin_care_clinic': 'Skin Care Clinic',
+      'electrician': 'Electrician',
+      'florist': 'Florist',
+      'hair_care': 'Hair Care',
+      'locksmith': 'Locksmith',
+      'plumber': 'Plumber',
+      'furniture_store': 'Furniture Store'
     };
     const searchLabel = searchParams.searchMode === 'category'
-      ? (categoryNames[searchParams.searchQuery] || searchParams.searchQuery)
-      : `"${searchParams.searchQuery}"`;
+      ? (categoryNames[searchParams.searchQuery] || escapeHtml(searchParams.searchQuery))
+      : `"${escapeHtml(searchParams.searchQuery)}"`;
 
     const algoLabel = searchParams.algorithm === 'popularity' ? 'Popularity' : 'Bayesian';
 
     searchInfoHtml = `
       <div class="search-info">
         <span class="search-info-label">${searchLabel}</span>
-        <span class="search-info-detail">${searchParams.radiusKm} km from ${searchParams.location} · ${algoLabel}</span>
+        <span class="search-info-detail">${escapeHtml(String(searchParams.radiusKm))} km from ${escapeHtml(searchParams.location)} · ${algoLabel}</span>
       </div>
     `;
   }
@@ -376,8 +442,9 @@ function displayResults(results, searchParams = null) {
         Bayesian Score: ${result.bayesianScore.toFixed(2)}
       </div>
       ${result.address ? `<div class="result-address">${escapeHtml(result.address)}</div>` : ''}
-      <a href="https://www.google.com/maps/place/?q=place_id:${result.placeId}"
+      <a href="https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(result.placeId)}"
          target="_blank"
+         rel="noopener noreferrer"
          class="result-link">
         View on Google Maps &#8594;
       </a>

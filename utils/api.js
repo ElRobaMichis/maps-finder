@@ -2,7 +2,7 @@
 
 import { CONFIG } from '../config/constants.js';
 
-const { PLACES_API_BASE, GEOCODING_API_BASE, MAX_RESULTS_FROM_API } = CONFIG;
+const { PLACES_API_BASE, MAX_RESULTS_FROM_API } = CONFIG;
 
 /**
  * Search by Google Place category/type using Nearby Search
@@ -123,7 +123,8 @@ export async function searchByText({ query, location, radius, apiKey }) {
 }
 
 /**
- * Geocode a location string to coordinates
+ * Geocode a location string to coordinates using Places API (New)
+ * Uses text search with location bias for better results
  * @param {string} query - Location string (e.g., "New York, NY")
  * @param {string} apiKey - Google API key
  * @returns {Promise<object>} - {lat, lng} coordinates
@@ -138,17 +139,38 @@ export async function geocodeLocation(query, apiKey) {
     };
   }
 
-  const url = `${GEOCODING_API_BASE}?address=${encodeURIComponent(query)}&key=${apiKey}`;
+  // Use Places API Text Search for geocoding (supports header-based auth)
+  const url = `${PLACES_API_BASE}/places:searchText`;
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': 'places.location,places.formattedAddress'
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      maxResultCount: 1
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || 'Could not find location. Please try a different address.');
+  }
+
   const data = await response.json();
 
-  if (data.status !== 'OK' || !data.results?.length) {
+  if (!data.places?.length || !data.places[0].location) {
     throw new Error('Could not find location. Please try a different address.');
   }
 
-  const { lat, lng } = data.results[0].geometry.location;
-  return { lat, lng };
+  const location = data.places[0].location;
+  return {
+    lat: location.latitude,
+    lng: location.longitude
+  };
 }
 
 /**
