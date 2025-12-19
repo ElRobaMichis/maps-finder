@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maps Top Finder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>
+        <svg class="compass-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor"/>
+          <path d="M12 2V5M12 19V22M2 12H5M19 12H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M14.5 9.5L12 12L9.5 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M9.5 9.5L12 12L14.5 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+        Maps Top Finder
+      </h1>
+      <button id="settings-toggle" class="settings-icon" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- API Key Setup -->
+    <section id="api-key-section" class="section hidden">
+      <div class="api-key-content">
+        <h2>Begin Your Journey</h2>
+        <p>Connect your Google API key to start exploring.</p>
+        <input type="password" id="api-key-input" placeholder="Paste your API key here">
+        <button id="save-api-key" class="btn btn-primary btn-full">Activate</button>
+        <div class="help-text">
+          <strong>Quick Setup Guide</strong>
+          <ol>
+            <li>Visit <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+            <li>Create or select a project</li>
+            <li>Enable "Places API (New)" and "Geocoding API"</li>
+            <li>Navigate to Credentials and create an API Key</li>
+          </ol>
+          <p>Includes $200/month free credit from Google.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Form -->
+    <section id="search-section" class="section">
+      <!-- Search Mode Toggle -->
+      <div class="form-group">
+        <label>Search Mode</label>
+        <div class="toggle-group">
+          <button id="search-by-category" class="toggle-btn active">
+            Category
+          </button>
+          <button id="search-by-text" class="toggle-btn">
+            Text
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Dropdown (shown when Category mode) -->
+      <div class="form-group" id="category-group">
+        <label for="category-select">Select Category</label>
+        <select id="category-select">
+          <optgroup label="Food & Drink">
+            <option value="restaurant">Restaurant</option>
+            <option value="cafe">Cafe / Coffee Shop</option>
+            <option value="bar">Bar</option>
+            <option value="bakery">Bakery</option>
+            <option value="pizza_restaurant">Pizza</option>
+            <option value="sushi_restaurant">Sushi</option>
+            <option value="fast_food_restaurant">Fast Food</option>
+            <option value="ice_cream_shop">Ice Cream</option>
+          </optgroup>
+          <optgroup label="Services">
+            <option value="barber_shop">Barber Shop</option>
+            <option value="hair_salon">Hair Salon</option>
+            <option value="beauty_salon">Beauty Salon</option>
+            <option value="spa">Spa</option>
+            <option value="gym">Gym / Fitness</option>
+            <option value="laundry">Laundry</option>
+          </optgroup>
+          <optgroup label="Financial">
+            <option value="atm">ATM</option>
+            <option value="bank">Bank</option>
+          </optgroup>
+          <optgroup label="Automotive">
+            <option value="gas_station">Gas Station</option>
+            <option value="car_wash">Car Wash</option>
+            <option value="car_repair">Auto Repair / Mechanic</option>
+            <option value="parking">Parking</option>
+          </optgroup>
+          <optgroup label="Health">
+            <option value="pharmacy">Pharmacy</option>
+            <option value="hospital">Hospital</option>
+            <option value="doctor">Doctor</option>
+            <option value="dentist">Dentist</option>
+          </optgroup>
+          <optgroup label="Shopping">
+            <option value="grocery_store">Grocery Store</option>
+            <option value="supermarket">Supermarket</option>
+            <option value="shopping_mall">Shopping Mall</option>
+            <option value="clothing_store">Clothing Store</option>
+            <option value="electronics_store">Electronics Store</option>
+          </optgroup>
+          <optgroup label="Recreation">
+            <option value="golf_course">Golf Course</option>
+            <option value="park">Park</option>
+            <option value="movie_theater">Movie Theater</option>
+            <option value="bowling_alley">Bowling</option>
+            <option value="night_club">Night Club</option>
+          </optgroup>
+          <optgroup label="Accommodation">
+            <option value="hotel">Hotel</option>
+            <option value="lodging">Lodging</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Text Search Input (shown when Text mode) -->
+      <div class="form-group hidden" id="text-search-group">
+        <label for="business-type">What are you looking for?</label>
+        <input
+          type="text"
+          id="business-type"
+          placeholder="e.g., vegan pizza, pet store, yoga studio"
+          autocomplete="off"
+        >
+      </div>
+
+      <!-- Location Toggle -->
+      <div class="form-group">
+        <label>Location</label>
+        <div class="toggle-group">
+          <button id="use-current-location" class="toggle-btn active">
+            Current Location
+          </button>
+          <button id="use-custom-location" class="toggle-btn">
+            Custom
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom Location Input with Autocomplete -->
+      <div class="form-group hidden" id="custom-location-group">
+        <div class="autocomplete-wrapper">
+          <input
+            type="text"
+            id="custom-location"
+            placeholder="Start typing an address..."
+            autocomplete="off"
+          >
+          <div id="autocomplete-dropdown" class="autocomplete-dropdown hidden"></div>
+        </div>
+      </div>
+
+      <!-- Radius Slider -->
+      <div class="form-group">
+        <label for="radius-slider">
+          Search Radius: <span id="radius-value">5</span> km
+        </label>
+        <input
+          type="range"
+          id="radius-slider"
+          min="1"
+          max="50"
+          value="5"
+        >
+      </div>
+
+      <!-- Ranking Algorithm -->
+      <div class="form-group">
+        <label>Ranking Algorithm</label>
+        <div class="toggle-group">
+          <button id="algo-bayesian" class="toggle-btn active" title="Balances rating quality with review count">
+            Bayesian
+          </button>
+          <button id="algo-popularity" class="toggle-btn" title="Favors places with many reviews">
+            Popularity
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Button -->
+      <button id="search-btn" class="btn btn-primary btn-full">
+        Discover Top Places
+      </button>
+    </section>
+
+    <!-- Loading State -->
+    <section id="loading-section" class="section hidden">
+      <div class="loader"></div>
+      <p>Exploring the area...</p>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results-section" class="section hidden">
+      <h2>Top Discoveries</h2>
+      <div id="results-container"></div>
+      <button id="new-search-btn" class="btn btn-secondary btn-full">New Exploration</button>
+    </section>
+
+    <!-- Error Section -->
+    <section id="error-section" class="section hidden">
+      <div class="error-content">
+        <p id="error-message"></p>
+        <button id="retry-btn" class="btn btn-secondary">Try Again</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>
